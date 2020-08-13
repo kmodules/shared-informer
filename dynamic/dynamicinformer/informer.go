@@ -29,7 +29,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/dynamic/dynamiclister"
 	"k8s.io/client-go/informers"
-	"k8s.io/client-go/tools/cache"
+	"kmodules.xyz/shared-informer/tools/cache"
 )
 
 // NewDynamicSharedInformerFactory constructs a new instance of dynamicSharedInformerFactory for all namespaces.

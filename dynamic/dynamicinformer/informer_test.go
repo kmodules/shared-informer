@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/diff"
 	"k8s.io/client-go/dynamic/dynamicinformer"
 	"k8s.io/client-go/dynamic/fake"
-	"k8s.io/client-go/tools/cache"
+	"kmodules.xyz/shared-informer/tools/cache"
 )
 
 func TestDynamicSharedInformerFactory(t *testing.T) {
