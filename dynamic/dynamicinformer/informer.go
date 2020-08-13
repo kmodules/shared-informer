@@ -27,8 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/dynamic/dynamiclister"
-	"k8s.io/client-go/informers"
 	"kmodules.xyz/shared-informer/tools/cache"
 )
 
@@ -44,7 +42,7 @@ func NewFilteredDynamicSharedInformerFactory(client dynamic.Interface, defaultRe
 		client:           client,
 		defaultResync:    defaultResync,
 		namespace:        namespace,
-		informers:        map[schema.GroupVersionResource]informers.GenericInformer{},
+		informers:        map[schema.GroupVersionResource]cache.SharedInformer{},
 		startedInformers: make(map[schema.GroupVersionResource]bool),
 		tweakListOptions: tweakListOptions,
 	}
@@ -56,7 +54,7 @@ type dynamicSharedInformerFactory struct {
 	namespace     string
 
 	lock      sync.Mutex
-	informers map[schema.GroupVersionResource]informers.GenericInformer
+	informers map[schema.GroupVersionResource]cache.SharedInformer
 	// startedInformers is used for tracking which informers have been started.
 	// This allows Start() to be called multiple times safely.
 	startedInformers map[schema.GroupVersionResource]bool
@@ -65,7 +63,7 @@ type dynamicSharedInformerFactory struct {
 
 var _ DynamicSharedInformerFactory = &dynamicSharedInformerFactory{}
 
-func (f *dynamicSharedInformerFactory) ForResource(gvr schema.GroupVersionResource) informers.GenericInformer {
+func (f *dynamicSharedInformerFactory) ForResource(gvr schema.GroupVersionResource) cache.SharedInformer {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
@@ -88,7 +86,7 @@ func (f *dynamicSharedInformerFactory) Start(stopCh <-chan struct{}) {
 
 	for informerType, informer := range f.informers {
 		if !f.startedInformers[informerType] {
-			go informer.Informer().Run(stopCh)
+			go informer.Run(stopCh)
 			f.startedInformers[informerType] = true
 		}
 	}
@@ -96,14 +94,14 @@ func (f *dynamicSharedInformerFactory) Start(stopCh <-chan struct{}) {
 
 // WaitForCacheSync waits for all started informers' cache were synced.
 func (f *dynamicSharedInformerFactory) WaitForCacheSync(stopCh <-chan struct{}) map[schema.GroupVersionResource]bool {
-	informers := func() map[schema.GroupVersionResource]cache.SharedIndexInformer {
+	informers := func() map[schema.GroupVersionResource]cache.SharedInformer {
 		f.lock.Lock()
 		defer f.lock.Unlock()
 
-		informers := map[schema.GroupVersionResource]cache.SharedIndexInformer{}
+		informers := map[schema.GroupVersionResource]cache.SharedInformer{}
 		for informerType, informer := range f.informers {
 			if f.startedInformers[informerType] {
-				informers[informerType] = informer.Informer()
+				informers[informerType] = informer
 			}
 		}
 		return informers
@@ -117,42 +115,23 @@ func (f *dynamicSharedInformerFactory) WaitForCacheSync(stopCh <-chan struct{}) 
 }
 
 // NewFilteredDynamicInformer constructs a new informer for a dynamic type.
-func NewFilteredDynamicInformer(client dynamic.Interface, gvr schema.GroupVersionResource, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions TweakListOptionsFunc) informers.GenericInformer {
-	return &dynamicInformer{
-		gvr: gvr,
-		informer: cache.NewSharedIndexInformer(
-			&cache.ListWatch{
-				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-					if tweakListOptions != nil {
-						tweakListOptions(&options)
-					}
-					return client.Resource(gvr).Namespace(namespace).List(context.TODO(), options)
-				},
-				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-					if tweakListOptions != nil {
-						tweakListOptions(&options)
-					}
-					return client.Resource(gvr).Namespace(namespace).Watch(context.TODO(), options)
-				},
+func NewFilteredDynamicInformer(client dynamic.Interface, gvr schema.GroupVersionResource, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions TweakListOptionsFunc) cache.SharedInformer {
+	return cache.NewSharedInformer(
+		&cache.ListWatch{
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.Resource(gvr).Namespace(namespace).List(context.TODO(), options)
 			},
-			&unstructured.Unstructured{},
-			resyncPeriod,
-			indexers,
-		),
-	}
-}
-
-type dynamicInformer struct {
-	informer cache.SharedIndexInformer
-	gvr      schema.GroupVersionResource
-}
-
-var _ informers.GenericInformer = &dynamicInformer{}
-
-func (d *dynamicInformer) Informer() cache.SharedIndexInformer {
-	return d.informer
-}
-
-func (d *dynamicInformer) Lister() cache.GenericLister {
-	return dynamiclister.NewRuntimeObjectShim(dynamiclister.New(d.informer.GetIndexer(), d.gvr))
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.Resource(gvr).Namespace(namespace).Watch(context.TODO(), options)
+			},
+		},
+		&unstructured.Unstructured{},
+		resyncPeriod,
+	)
 }

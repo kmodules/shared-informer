@@ -21,7 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/clock"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -165,19 +164,6 @@ type SharedInformer interface {
 	LastSyncResourceVersion() string
 }
 
-// SharedIndexInformer provides add and get Indexers ability based on SharedInformer.
-type SharedIndexInformer interface {
-	SharedInformer
-	// AddIndexers add indexers to the informer before it starts.
-	AddIndexers(indexers Indexers) error
-	GetIndexer() Indexer
-}
-
-// NewSharedInformer creates a new instance for the listwatcher.
-func NewSharedInformer(lw ListerWatcher, exampleObject runtime.Object, defaultEventHandlerResyncPeriod time.Duration) SharedInformer {
-	return NewSharedIndexInformer(lw, exampleObject, defaultEventHandlerResyncPeriod, Indexers{})
-}
-
 // NewSharedIndexInformer creates a new instance for the listwatcher.
 // The created informer will not do resyncs if the given
 // defaultEventHandlerResyncPeriod is zero.  Otherwise: for each
@@ -190,11 +176,11 @@ func NewSharedInformer(lw ListerWatcher, exampleObject runtime.Object, defaultEv
 // requested before the informer starts and the
 // defaultEventHandlerResyncPeriod given here and (b) the constant
 // `minimumResyncPeriod` defined in this file.
-func NewSharedIndexInformer(lw ListerWatcher, exampleObject runtime.Object, defaultEventHandlerResyncPeriod time.Duration, indexers Indexers) SharedIndexInformer {
+func NewSharedInformer(lw ListerWatcher, exampleObject runtime.Object, defaultEventHandlerResyncPeriod time.Duration) SharedInformer {
 	realClock := &clock.RealClock{}
 	sharedIndexInformer := &sharedIndexInformer{
 		processor:                       &sharedProcessor{clock: realClock},
-		indexer:                         NewIndexer(DeletionHandlingMetaNamespaceKeyFunc, indexers),
+		// indexer:                         NewIndexer(DeletionHandlingMetaNamespaceKeyFunc, indexers),
 		listerWatcher:                   lw,
 		objectType:                      exampleObject,
 		resyncCheckPeriod:               defaultEventHandlerResyncPeriod,
@@ -268,7 +254,7 @@ func WaitForCacheSync(stopCh <-chan struct{}, cacheSyncs ...InformerSynced) bool
 // sharedProcessor, which is responsible for relaying those
 // notifications to each of the informer's clients.
 type sharedIndexInformer struct {
-	indexer    Indexer
+	// indexer    Indexer
 	controller Controller
 
 	processor             *sharedProcessor
@@ -320,6 +306,10 @@ func (v *dummyController) LastSyncResourceVersion() string {
 	return ""
 }
 
+func (s *sharedIndexInformer) GetStore() Store {
+	return nil
+}
+
 type updateNotification struct {
 	oldObj interface{}
 	newObj interface{}
@@ -337,7 +327,7 @@ func (s *sharedIndexInformer) Run(stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
 
 	fifo := NewDeltaFIFOWithOptions(DeltaFIFOOptions{
-		KnownObjects:          s.indexer,
+		KnownObjects:          nil,
 		EmitDeltaTypeReplaced: true,
 	})
 
@@ -395,25 +385,6 @@ func (s *sharedIndexInformer) LastSyncResourceVersion() string {
 		return ""
 	}
 	return s.controller.LastSyncResourceVersion()
-}
-
-func (s *sharedIndexInformer) GetStore() Store {
-	return s.indexer
-}
-
-func (s *sharedIndexInformer) GetIndexer() Indexer {
-	return s.indexer
-}
-
-func (s *sharedIndexInformer) AddIndexers(indexers Indexers) error {
-	s.startedLock.Lock()
-	defer s.startedLock.Unlock()
-
-	if s.started {
-		return fmt.Errorf("informer has already started")
-	}
-
-	return s.indexer.AddIndexers(indexers)
 }
 
 func (s *sharedIndexInformer) GetController() Controller {
@@ -486,9 +457,6 @@ func (s *sharedIndexInformer) AddEventHandlerWithResyncPeriod(handler ResourceEv
 	defer s.blockDeltas.Unlock()
 
 	s.processor.addListener(listener)
-	for _, item := range s.indexer.List() {
-		listener.add(addNotification{newObj: item})
-	}
 }
 
 func (s *sharedIndexInformer) HandleDeltas(obj interface{}) error {
@@ -500,36 +468,8 @@ func (s *sharedIndexInformer) HandleDeltas(obj interface{}) error {
 		switch d.Type {
 		case Sync, Replaced, Added, Updated:
 			s.cacheMutationDetector.AddObject(d.Object)
-			if old, exists, err := s.indexer.Get(d.Object); err == nil && exists {
-				if err := s.indexer.Update(d.Object); err != nil {
-					return err
-				}
-
-				isSync := false
-				switch {
-				case d.Type == Sync:
-					// Sync events are only propagated to listeners that requested resync
-					isSync = true
-				case d.Type == Replaced:
-					if accessor, err := meta.Accessor(d.Object); err == nil {
-						if oldAccessor, err := meta.Accessor(old); err == nil {
-							// Replaced events that didn't change resourceVersion are treated as resync events
-							// and only propagated to listeners that requested resync
-							isSync = accessor.GetResourceVersion() == oldAccessor.GetResourceVersion()
-						}
-					}
-				}
-				s.processor.distribute(updateNotification{oldObj: old, newObj: d.Object}, isSync)
-			} else {
-				if err := s.indexer.Add(d.Object); err != nil {
-					return err
-				}
-				s.processor.distribute(addNotification{newObj: d.Object}, false)
-			}
+			s.processor.distribute(addNotification{newObj: d.Object}, false)
 		case Deleted:
-			if err := s.indexer.Delete(d.Object); err != nil {
-				return err
-			}
 			s.processor.distribute(deleteNotification{oldObj: d.Object}, false)
 		}
 	}

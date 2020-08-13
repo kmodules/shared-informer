@@ -19,13 +19,13 @@ package dynamicinformer
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/informers"
+	"kmodules.xyz/shared-informer/tools/cache"
 )
 
 // DynamicSharedInformerFactory provides access to a shared informer and lister for dynamic client
 type DynamicSharedInformerFactory interface {
 	Start(stopCh <-chan struct{})
-	ForResource(gvr schema.GroupVersionResource) informers.GenericInformer
+	ForResource(gvr schema.GroupVersionResource) cache.SharedInformer
 	WaitForCacheSync(stopCh <-chan struct{}) map[schema.GroupVersionResource]bool
 }
 
