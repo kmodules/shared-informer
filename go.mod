@@ -20,6 +20,8 @@ require (
 	github.com/gophercloud/gophercloud v0.1.0
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7
 	github.com/imdario/mergo v0.3.5
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
