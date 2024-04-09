@@ -9,10 +9,12 @@ require (
 	github.com/Azure/go-autorest/autorest v0.9.0
 	github.com/Azure/go-autorest/autorest/adal v0.5.0
 	github.com/davecgh/go-spew v1.1.1
+	github.com/docker/cli v24.0.9+incompatible
+	github.com/docker/docker v24.0.9+incompatible
 	github.com/evanphx/json-patch v4.2.0+incompatible
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/groupcache v0.0.0-20160516000752-02826c3e7903
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.5.4
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/gofuzz v1.1.0
 	github.com/google/uuid v1.1.1
@@ -25,16 +27,23 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
-	go.bytebuilders.dev/license-proxyserver v0.0.3
+	go.bytebuilders.dev/audit v0.0.33
+	go.bytebuilders.dev/license-proxyserver v0.0.9
+	go.bytebuilders.dev/license-verifier v0.14.0
+	go.bytebuilders.dev/license-verifier/kubernetes v0.14.0
 	golang.org/x/crypto v0.6.0
-	golang.org/x/net v0.7.0
+	golang.org/x/net v0.23.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
+	gomodules.xyz/password-generator v0.2.9
 	google.golang.org/appengine v1.5.0 // indirect
+	google.golang.org/protobuf v1.33.0
 	k8s.io/api v0.18.6
 	k8s.io/apimachinery v0.18.6
 	k8s.io/klog v1.0.0
 	k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89
+	kmodules.xyz/client-go v0.29.13
+	kmodules.xyz/resource-metadata v0.18.2
 	sigs.k8s.io/yaml v1.2.0
 )
 
