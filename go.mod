@@ -2,40 +2,38 @@
 
 module k8s.io/client-go
 
-go 1.13
+go 1.24.0
 
 require (
-	cloud.google.com/go v0.38.0 // indirect
-	github.com/Azure/go-autorest/autorest v0.9.0
-	github.com/Azure/go-autorest/autorest/adal v0.5.0
-	github.com/davecgh/go-spew v1.1.1
-	github.com/evanphx/json-patch v4.2.0+incompatible
-	github.com/gogo/protobuf v1.3.1
-	github.com/golang/groupcache v0.0.0-20160516000752-02826c3e7903
-	github.com/golang/protobuf v1.3.2
-	github.com/google/btree v1.0.0 // indirect
-	github.com/google/gofuzz v1.1.0
-	github.com/google/uuid v1.1.1
-	github.com/googleapis/gnostic v0.1.0
-	github.com/gophercloud/gophercloud v0.1.0
-	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7
-	github.com/imdario/mergo v0.3.5
-	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/peterbourgon/diskv v2.0.1+incompatible
-	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.4.0
-	go.bytebuilders.dev/license-proxyserver v0.0.3
-	golang.org/x/crypto v0.6.0
-	golang.org/x/net v0.7.0
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
-	google.golang.org/appengine v1.5.0 // indirect
-	k8s.io/api v0.18.6
-	k8s.io/apimachinery v0.18.6
+	github.com/google/gofuzz v1.2.0
+	k8s.io/api v0.25.1
+	k8s.io/apimachinery v0.25.1
 	k8s.io/klog v1.0.0
-	k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89
-	sigs.k8s.io/yaml v1.2.0
+	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
+)
+
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/hashicorp/golang-lru v0.5.1 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/stretchr/testify v1.8.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
+	gopkg.in/inf.v0 v0.9.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
+	k8s.io/klog/v2 v2.80.1 // indirect
+	sigs.k8s.io/structured-merge-diff/v3 v3.0.0 // indirect
+	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
 replace (
